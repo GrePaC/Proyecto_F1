@@ -1,0 +1,483 @@
+import math
+from turtle import*
+import random
+import time
+
+##/////////////////////////////////////////FUNCIONES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+def pide_valor(letrero):
+    valor=float(input(letrero))
+    return valor
+
+#______________________________________________________________________________________________________________________
+#Definimos coordenadas dentro de la matriz con respecto a nuestra función
+def coords(fn,xi,xf,CX,cx3,cx2,cx1,cx,distx):
+    i=0
+    x=xi
+    for i in range (0,int(distx)+1):
+        CX[i][0]=x
+        yn=fn(x,cx3,cx2,cx1,cx)
+        CX[i][1]=yn
+        x=x+1
+
+#______________________________________________________________________________________________________________________
+#Saca tu dato y con respecto a la x que le otorgues y tus datos en a, b, c
+
+def funcion3(x,cx3,cx2,cx1,cx):
+    P1=(x*x*x)*(cx3)
+
+    P2=(x*x)*(cx2)
+
+    P3=(x)*(cx1)
+
+    P4=cx
+
+    r=P1+P2+P3+P4
+    return (r)
+
+#______________________________________________________________________________________________________________________
+#Grafica tu pista
+
+def graphtrack(a,z,arreglo):
+    
+    while a<len(coordX):
+        pencolor("Black")
+        
+        goto(arreglo[a][0]/z,arreglo[a][1]/z)
+        pendown()
+
+        
+        a=a+1
+
+#______________________________________________________________________________________________________________________
+#Realiza los circulos
+        
+def drawcircle(R,z,n,cx3,cx2,cx1,cx0):
+    penup()
+    goto(R/z,(funcion3(R,cx3,cx2,cx1,cx0)-n)/z)
+    pendown()
+    circle(100/z)
+    
+    if n==0:
+        
+        penup()
+        goto((R-40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+30)/z)
+        pendown()
+        goto((R+40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+30)/z)
+        goto((R+40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+100)/z)
+        goto((R-40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+100)/z)
+        goto((R-40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+30)/z)
+        penup()
+    else:
+        penup()
+        goto((R-40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+100)/z)
+        pendown()
+        goto((R+40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+100)/z)
+        goto((R+40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+170)/z)
+        goto((R-40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+170)/z)
+        goto((R-40)/z,((funcion3(R,cx3,cx2,cx1,cx0)-n)+100)/z)
+        penup()
+
+#______________________________________________________________________________________________________________________
+#LAGRANGE
+def lagrangeTerm(x0,xa,xb,xc,y):
+    m=(x0-xa)*(x0-xb)*(x0-xc)
+    x3=1/m*y
+    x2=(-xa-xb-xc)/m*y
+    x1=(xa*xb+xa*xc+xb*xc)/m*y
+    x0=(-xa*xb*xc)/m*y
+
+    return x3,x2,x1,x0
+#______________________________________________________________________________________________________________________
+#Resultado con derivadas
+
+def derivate(x,a,b,c):
+    y=(a*(x**2))+(b*x)+c
+    return (y)
+
+def derivate2(x,a,b):
+    y=(a*(x))+(b)
+    return (y)
+
+def mxb(x,a2,b2,c2):
+    m=(a2*(x**2))+(b2*x)+c2
+    return (m)
+
+
+#______________________________________________________________________________________________________________________
+#Distancia FormulaN
+
+def Fdistancia(x0,y0,dt,distepuntos,cx3,cx2,cx1,cx0):
+    xi=x0
+    yi=y0
+    xf=xi+distepuntos
+    yf=funcion3(xf,cx3,cx2,cx1,cx0)
+
+    
+    DistT2=0
+    cont=0
+    while cont<=dt:
+        distP=distancia(xi,yi,xf,yf)
+        DistT2=DistT2+distP
+
+        xi=xf
+        yi=yf
+        xf=xi+distepuntos
+        yf=funcion3(xf,cx3,cx2,cx1,cx0)
+        cont=cont+1
+    return DistT2
+        
+    
+def distancia(xi,yi,xf,yf):
+    disti=((xf-xi)**2)+((yf-yi)**2)
+    dist=math.sqrt(disti)
+    return dist
+
+
+
+#______________________________________________________________________________________________________________________
+#Define matriz de datos
+
+def newMatrix(f,c,n):
+     matriz = []
+     for i in range(f):
+         a = [n]*c
+         matriz.append(a)
+     return matriz
+
+#______________________________________________________________________________________________________________________
+#Radio y Velocidad Maxima
+
+def radio(x,a2,b2,c2,a3,b3,DPas):
+    Der2=(derivate(x,a2,b2,c2))**2
+    A=derivate2(x,a3,b3)
+    
+    N=(1+Der2)**(3/2)
+    D=abs(A)
+    if D<.0000008:
+        D=DPas
+
+    R=N/D
+    return (R,D)
+    
+def VMax(Miu,g,R):
+    VP=Miu*g*R
+    V=math.sqrt(VP)
+    return(V)
+    
+    
+#______________________________________________________________________________________________________________________
+#Simulate
+
+
+def simulate(distx,a2,b2,c2,a3,b3,arreglo,salir):
+    if salir==1:
+        NoJala=0
+        DPas=0
+        inicio=time.time()
+        for i in range (0,int(distx)+1):
+            rder=derivate(arreglo[i][0],a2,b2,c2)
+            rad,DPas=radio(arreglo[i][0],a2,b2,c2,a3,b3,DPas)
+            rder=abs(rder)*20 #cambiara para que se salga
+            
+            veld=rder*128
+            
+            VM=VMax(0.03,9.81,rad)
+            VM=VM*2
+            if rder<=(VM):
+                
+                penup()
+                pencolor("Blue")
+                
+                
+
+                
+                goto(arreglo[i][0]/z,arreglo[i][1]/z)
+                dot()
+                delay(4/veld)
+                penup()
+                
+                
+            elif rder>(VM):
+                print("No jala")
+                PosXNJ=arreglo[i][0]
+                PosYNJ=arreglo[i][1]
+                NoJala=1
+                break
+            penup()
+            goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1000)/z)
+            final=time.time()
+            MS= (((rder*105)/45))
+            if MS>=106:
+                MS=105
+            print("Velocidad : ",MS)
+            write("Velocidad:   "+ str(MS))
+            undo()
+            
+        if NoJala==1:
+            x=PosXNJ
+            y=PosYNJ
+            m=mxb(x,a2,b2,c2)
+            
+            delay(4/(rder/2))
+            for j in range (0,90):
+                x=x+1
+                y=y+1*m
+                goto(x/z,y/z)
+                color("Purple")
+                dot(5)
+             
+                update()
+            goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1000)/z)
+            
+            write("EL CARRO HA CHOCADO",font=('Arial',20,'normal'))
+            goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1200)/z)
+            write("Velocidad a la que choco en m/s:   "+ str(MS))
+            goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1500)/z)
+            write("Tiempo transcurrido en la simulación en segundos:     "+str(final-inicio))   
+            
+            
+    else:
+        NoJala=0
+        DPas=0
+        inicio=time.time()
+        for i in range (0,int(distx)+1):
+            rder=derivate(arreglo[i][0],a2,b2,c2)
+            rad,DPas=radio(arreglo[i][0],a2,b2,c2,a3,b3,DPas)
+            rder=abs(rder)*10 #cambiara para que se salga
+            veld=rder*128
+            
+            VM=VMax(0.03,9.81,rad)
+            VM=VM*20
+            if rder<=(VM):
+                
+                penup()
+                pencolor("Blue")
+                
+                
+
+                
+                goto(arreglo[i][0]/z,arreglo[i][1]/z)
+                dot()
+                delay(4/veld)
+                penup()
+                
+                
+            elif rder>(VM):
+                
+                PosXNJ=arreglo[i][0]
+                PosYNJ=arreglo[i][1]
+                NoJala=1
+                break
+
+            penup()
+            goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1000)/z)
+            
+            MS= (((rder*105)/45)+3.3)
+            if MS>=106:
+                MS=105
+            
+            final=time.time()
+            write("Velocidad:   "+ str(MS))
+            undo()
+            
+            
+            
+        
+        
+        if NoJala==1:
+            x=PosXNJ
+            y=PosYNJ
+            m=mxb(x,a2,b2,c2)
+            print("Velocidad :",MS)
+            for j in range (0,100):
+                x=x+1
+                y=y+1*m
+                goto(x/z,y/z)
+                color("Purple")
+                dot(5)
+                update()
+                
+        goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1000)/z)
+
+        color("Purple")
+        write("EL CARRO HA COMPLETADO EL TRAYECTO",font=('Arial',20,'normal'))
+        goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1200)/z)
+        write("Velocidad a la que sale del trayecto m/s:   "+ str(MS))
+        goto(((arreglo[0][0])-100)/z,((arreglo[0][1])-1500)/z)
+        write("Tiempo transcurrido en la simulación en segundos:     "+str(final-inicio))
+
+#_______________________________________________________________________________________________________________________
+#///////////////////////////////////////////////Principal\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+
+
+
+VXi=pide_valor("Ingresa el valor de X inicial: ")
+VYi=pide_valor("Ingresa el valor de Y inicial: ")
+VXf=pide_valor("Ingresa el valor de X final: ")
+VYf=pide_valor("Ingresa el valor de Y final: ")
+
+
+
+distx=VXf-VXi
+#_____________________________________________________________________________________________________
+#TAMAÑO DE PASO
+coordX=newMatrix(int(distx)+1,2,"")
+
+coordXT=newMatrix(int(distx)+1,2,"")
+
+coordXB=newMatrix(int(distx)+1,2,"")
+
+dt=500
+distepuntos=(distx/dt)
+
+
+
+distfx=distx/3
+#____________________________________________________________________________________________________
+#Definimos valores X
+vx0=VXi
+vx1=vx0+distfx
+print("Punto intermedio X 1",vx1)
+vx2=vx1+distfx
+print("Punto intermedio X 2",vx2)
+vx3=VXf
+#Definimos valores Y
+vy0=VYi
+vy3=VYf
+
+if VYf>VYi:
+    vy1=VYi-100
+    vy2=VYf+100
+else:
+    vy1=VYi+100
+    vy2=VYf-100
+print("Punto intermedio Y 1",vy1)
+print("Punto intermedio Y 2",vy2)
+
+t1x3,t1x2,t1x1,t1x0=lagrangeTerm(vx0,vx1,vx2,vx3,vy0)
+t2x3,t2x2,t2x1,t2x0=lagrangeTerm(vx1,vx0,vx2,vx3,vy1)
+t3x3,t3x2,t3x1,t3x0=lagrangeTerm(vx2,vx0,vx1,vx3,vy2)
+t4x3,t4x2,t4x1,t4x0=lagrangeTerm(vx3,vx0,vx1,vx2,vy3)
+
+cx3=t1x3+t2x3+t3x3+t4x3
+cx2=t1x2+t2x2+t3x2+t4x2
+cx1=t1x1+t2x1+t3x1+t4x1
+cx0=t1x0+t2x0+t3x0+t4x0
+
+print("A: ",cx3)
+a=cx3
+print("B: ",cx2)
+b=cx2
+print("C: ",cx1)
+c=cx1
+print("D: ",cx0)
+d=cx0
+
+
+#__________________________________________________________________________________________________________________________________
+#derivada (ecuacion cuadratica)
+
+tdx2=cx3*3 #a |
+tdx1=cx2*2 #b |
+tdx0=cx1 #c |
+
+print ("A Der:",tdx2)
+a2=tdx2
+
+print ("B Der:",tdx1)
+b2=tdx1
+print ("C Der:",tdx0)
+c2=tdx0
+
+
+disc=(tdx1**2)-(4*tdx2*tdx0)
+
+if disc>=0:
+    x1d=(-tdx1+ math.sqrt(disc))/(2*tdx2)
+    x2d=(-tdx1- math.sqrt(disc))/(2*tdx2)
+    print("R0: ",x1d)
+    print("R1 :",x2d)
+else:
+    print("discriminante negativo")
+#___________________________________________________________________________________________________________________________________
+#DEFINICIÓN DE COORDENADAS
+coords(funcion3,VXi,VXf,coordX,cx3,cx2,cx1,cx0,distx)
+
+coords(funcion3,VXi,VXf,coordXT,cx3,cx2,cx1,cx0+50,distx)
+
+coords(funcion3,VXi,VXf,coordXB,cx3,cx2,cx1,cx0+100,distx)
+
+
+
+
+
+DistT=Fdistancia(vx0,vy0,dt,distepuntos,cx3,cx2,cx1,cx0)
+print ("Longitud: ",DistT)
+
+    
+
+#______________________________________________________________________________________________________
+#Segunda Derivada
+    
+td2x2=tdx2*2 #a ||
+a3=td2x2             
+td2x1=tdx1 #b ||
+b3=td2x1
+
+print ("A 2Der:",td2x2)
+a3=td2x2
+print ("B 2Der:",td2x1)
+b3=td2x1
+#____________________________________________________________________________________________________________
+
+
+
+
+print("")
+MoS=pide_valor("Ingresa 1 si solamente deseas ver los planos con la colocación de las gradas, ingresa 2 si deseas ver la simulación: ")
+if MoS==2:
+    print("")
+    salir=pide_valor("Ingresa 1 si quieres que el automóvil se salga de la pista, ingresa 2 si deseas ver el recorrido completo: ")
+    print("")
+
+#____________________________________________________________________________________________________________
+
+#/////////////////////////PINTAR TODO\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#Define pantalla
+tracer(False)
+setup(900,600)
+title("Simulador de Formula Uno")
+setworldcoordinates(0,0,349,320)
+hideturtle()
+#____________________________________________________________________________________________________________________
+#Define coordenadas iniciales, zoom y punto inicial
+z=9.2
+a=2
+penup()
+goto(coordX[1][0]/z,coordX[1][1]/z)
+pendown()
+#______________________________________________________________________________________________________________________
+#Pinta la pista
+#abajo
+graphtrack(a,z,coordX)
+penup()
+#coordXT EN MEDIO
+#Arriba
+graphtrack(a,z,coordXB)
+#______________________________________________________________________________________________________________________
+#Pinta circulos de validación de radio de curva
+R0=x1d
+R1=x2d
+tracer(True)
+n=0
+
+drawcircle(R0,z,n,cx3,cx2,cx1,cx0+100)
+n=200
+drawcircle(R1,z,n,cx3,cx2,cx1,cx0)
+penup()
+#Simulate
+if MoS==2:
+    goto(coordX[1][0]/z,coordX[1][1]/z)
+    simulate(distx,a2,b2,c2,a3,b3,coordXT,salir)
